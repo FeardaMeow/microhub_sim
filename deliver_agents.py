@@ -2,6 +2,9 @@ import simpy
 
 class DeliverySchedule():
     def __init__(self, locations, buildings, num_packages):
+        '''
+            Assumption the locations are in order of delivery route
+        '''
         self.locations = locations
         self.buildings = buildings
         self.num_packages  = num_packages
@@ -28,17 +31,17 @@ class AgentPool():
 
 class Agent():
 
-    def __init__(self, env, delivery_schedule, current_location, delivery_hub_location):
+    def __init__(self, env, delivery_schedule, current_location, delivery_hub_location, speed, parking_time):
         self.env = env
         self.delivery_schedule = delivery_schedule
         self.current_location = current_location
         self.delivery_hub_location = delivery_hub_location
 
         # Drive Parameters
-
+        self.speed = speed
 
         # Parking Parameters
-
+        self.parking_time = parking_time
 
 
         pass
@@ -74,4 +77,21 @@ class Agent():
         TODO: Create timeout for package delivery time based on num_packages and building type
         '''
         building.process_delivery(num_packages)
+
+class Electric_Bike(Agent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _park(self, building):
+        '''
+        TODO: 1. Call 'yield env.timeout()' on parking
+        '''
+        pass
+
+    def _drive(self, location):
+        '''
+        TODO: 1. Call 'yield env.timeout()'
+        TODO: 2. Update self.current_location = delivery location
+        '''
+
         pass

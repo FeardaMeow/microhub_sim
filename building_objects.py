@@ -6,7 +6,7 @@ class Buidling():
         self.env = env
         self.num_residents = num_residents
 
-    def process_delivery(self):
+    def process_delivery(self, num_packages):
         '''
         Generic Delivery Process: Make Delivery, Return to Vehicle
         '''
