@@ -33,6 +33,14 @@ class Agent():
         self.delivery_schedule = delivery_schedule
         self.current_location = current_location
         self.delivery_hub_location = delivery_hub_location
+
+        # Drive Parameters
+
+
+        # Parking Parameters
+
+
+
         pass
 
     def make_deliveries(self):
@@ -65,4 +73,5 @@ class Agent():
         '''
         TODO: Create timeout for package delivery time based on num_packages and building type
         '''
+        building.process_delivery(num_packages)
         pass
