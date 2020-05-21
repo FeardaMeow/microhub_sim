@@ -2,11 +2,12 @@ import simpy
 
 class Buidling():
 
-    def __init__(self, env):
+    def __init__(self, env, num_residents):
         self.env = env
+        self.num_residents = num_residents
 
-    def process_delivery(self, delivery_agent):
-    '''
-    Generic Delivery Process: Make Delivery, Return to Vehicle
-    '''
+    def process_delivery(self):
+        '''
+        Generic Delivery Process: Make Delivery, Return to Vehicle
+        '''
         pass
