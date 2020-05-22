@@ -70,7 +70,7 @@ class Agent():
         '''
         TODO: Create timeout for parking time based on building type
         '''
-        pass
+        building.park()
 
     def _deliver(self, num_packages, building):
         '''
