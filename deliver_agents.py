@@ -1,4 +1,5 @@
 import simpy
+import numpy as np
 
 class DeliverySchedule():
     def __init__(self, locations, buildings, num_packages):
@@ -25,12 +26,57 @@ class AgentPool():
     '''
     Creates a pool of delivery agents to mimic a finite resource
     '''
-    def __init__(self, env, num_agents):
+    def __init__(self, env, num_agents, agent, base_params, package_dist, package_params):
         self.env = env
         self.num_agents = simpy.Resource(env, num_agents)
+        self.agent = agent
+        self.base_params = base_params
+        self.package_dist = package_dist
+        self.package_params = package_params
+
+    def process_deliveries(self, locations, buildings):
+        '''
+        Input:
+            locations = list of location in sorted order 
+            buildings = list of buildings in sorted order based on location
+        '''
+        # Process all deliveries till empty
+        while len(locations) > 0:
+            with self.num_agents.request() as request:
+                # Wait till a deliverh agent is available
+                yield request
+                temp_param = self.base_params
+
+                # Process into correcty format for simulation
+                locations_list = []
+                buildings_list = []
+                num_packages_list = []
+                for i in range(np.min(self._num_packages(), len(locations))):
+                    loc_i = locations.pop(0)
+                    building_i = buildings.pop(0)
+                    if i == 0:
+                        locations_list.append(loc_i)
+                        buildings_list.append(building_i)
+                        num_packages_list.append(1)
+                    else:
+                        if locations_list[-1] == loc_i:
+                            num_packages_list[-1] += 1
+                        else:
+                            locations_list.append(loc_i)
+                            buildings_list.append(building_i)
+                            num_packages_list.append(1)
+
+                # Update parameters and create delivery agent
+                temp_param.update({'delivery_schedule':DeliverySchedule(locations_list, buildings_list, num_packages_list), 'env':self.env})
+                delivery_agent = self.agent(**temp_param)
+                self.env.process(delivery_agent.make_deliveries())
+
+    def _num_packages(self):
+        return self.package_dist.rvs(*self.package_params)
+
+                
 
 class Agent():
-
     def __init__(self, env, delivery_schedule, current_location, delivery_hub_location, speed, parking_time):
         self.env = env
         self.delivery_schedule = delivery_schedule
@@ -42,9 +88,6 @@ class Agent():
 
         # Parking Parameters
         self.parking_time = parking_time
-
-
-        pass
 
     def make_deliveries(self):
         '''
@@ -93,5 +136,4 @@ class Electric_Bike(Agent):
         TODO: 1. Call 'yield env.timeout()'
         TODO: 2. Update self.current_location = delivery location
         '''
-
         pass

@@ -1,4 +1,5 @@
 import simpy
+import numpy as np
 
 class Building():
 
@@ -10,7 +11,7 @@ class Building():
         '''
         Generic Delivery Process: Make Delivery, Return to Vehicle
         '''
-        self._deliver_packages(num_packages, **kwargs)
+        self._deliver_packages(num_packages)
 
     def _deliver_packages(self, num_packages):
         pass
