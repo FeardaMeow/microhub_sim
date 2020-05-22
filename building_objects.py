@@ -12,9 +12,6 @@ class Building():
         '''
         self._deliver_packages(num_packages, **kwargs)
 
-    def park(self, agent):
-        pass
-
     def _deliver_packages(self, num_packages):
         pass
 
@@ -26,9 +23,6 @@ class SingleFamily(Building):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def park(self, agent):
-        pass
-
     def _deliver_packages(self, num_packages):
         pass
 
@@ -38,9 +32,6 @@ class LowRise(Building):
     '''
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-    def park(self, agent):
-        pass
 
     def _deliver_packages(self, num_packages):
         pass
@@ -54,9 +45,6 @@ class NeighborhoodCommercial(Building):
         super().__init__(**kwargs)
         self.num_floors = num_floors
 
-    def park(self, agent):
-        pass
-
     def _deliver_packages(self, num_packages):
         pass
 
@@ -68,9 +56,6 @@ class PedestrianDesignated(Building):
     def __init__(self, num_floors, **kwargs):
         super().__init__(**kwargs)
         self.num_floors = num_floors
-
-    def park(self, agent):
-        pass
 
     def _deliver_packages(self, num_packages):
         pass
