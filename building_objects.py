@@ -3,9 +3,10 @@ import numpy as np
 
 class Building():
 
-    def __init__(self, env, num_residents):
+    def __init__(self, env, num_residents, name):
         self.env = env
         self.num_residents = num_residents
+        self.name = name
 
     def process_delivery(self, num_packages):
         '''
@@ -31,8 +32,9 @@ class LowRise(Building):
     '''
     multi-row townhouse
     '''
-    def __init__(self, **kwargs):
+    def __init__(self, num_houses, **kwargs):
         super().__init__(**kwargs)
+        self.num_houses = num_houses
 
     def _deliver_packages(self, num_packages):
         pass
@@ -53,6 +55,8 @@ class PedestrianDesignated(Building):
     '''
     apartments
     condos
+
+    with high density shopping underneath
     '''
     def __init__(self, num_floors, **kwargs):
         super().__init__(**kwargs)
