@@ -51,6 +51,7 @@ class AgentPool():
         # Process all deliveries till empty
         while len(locations) > 0:
             with self.num_agents.request() as request:
+<<<<<<< HEAD
                 # Wait till a deliverh agent is available
                 yield request
                 temp_param = self.base_params
@@ -58,6 +59,7 @@ class AgentPool():
                 # Process into correct format for simulation
 =======
                 # Process into correcty format for simulation
+>>>>>>> 8111f70e40e84247341667ed416a9b0b0652bbc8
                 locations_list = []
                 buildings_list = []
                 num_packages_list = []
