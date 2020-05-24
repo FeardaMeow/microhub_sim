@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import DistanceMetric
+import building_objects
+
+import simpy
+env = simpy.Environment()
 
 eastlake = pd.read_csv("input_data/eastlake.csv")
 cap = pd.read_csv("input_data/cap.csv")
@@ -102,15 +106,26 @@ def demand(df):
     loc = df[['LAT','LON', "Building"]]
     locations = pd.concat([locations, distances], axis=1, sort=False)
     join = locations.join(loc, lsuffix='_caller', rsuffix='_other')
-    return(join)
+
+    building = []
+
+    for value in join["Building"]:
+        if value == "Apartment":
+            building.append(building_objects.Apartment(deliver="norm", deliver_params=[180,1], env=env, num_residents=1, name=join.Location_ID[i]))
+        elif value == "Condo":
+            building.append(building_objects.Condo(num_houses=1,deliver="norm", deliver_params=[120,1], env=env, num_residents=1, name=join.Location_ID[i]))
+        elif value == "ResidenceBuilding":
+            building.append(building_objects.ResidenceBuilding(deliver="norm", deliver_params=[60,1], env=env, num_residents=1, name=join.Location_ID[i]))
+
+    return(join, building)
 
 def main():
-	print(demand(eastlake))
+	demand(eastlake)
 
 if __name__ == 'main':
 	main()
 
-
+print(demand(eastlake))
 
 
 

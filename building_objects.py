@@ -28,7 +28,7 @@ class Apartment(Building):
     Init:
         deliver = random distribution that follows scipy api
         deliver_params = list(parameters for deliver distribution)
->>>>>>> 8111f70e40e84247341667ed416a9b0b0652bbc8
+
     '''
     def __init__(self, deliver, deliver_params, **kwargs):
         super().__init__(**kwargs)
@@ -48,7 +48,7 @@ class Condo(Building):
     Init:
         deliver = random distribution that follows scipy api
         deliver_params = list(parameters for deliver distribution, constant for delivering to multiple houses)
->>>>>>> 8111f70e40e84247341667ed416a9b0b0652bbc8
+
     '''
     def __init__(self, num_houses, deliver, deliver_params, **kwargs):
         super().__init__(**kwargs)
@@ -63,15 +63,15 @@ class ResidenceBuilding(Building):
     '''
     Apartment|4-Plex
     '''
-    def __init__(self, num_floors, **kwargs):
+    def __init__(self, num_floors, deliver, deliver_params, **kwargs):
         super().__init__(**kwargs)
         self.num_floors = num_floors
+        self.deliver = deliver
+        self.deliver_params = deliver_params
 
     def _deliver_packages(self, num_packages):
         yield self.env.timeout(num_packages * self.deliver.rvs(*self.deliver_params))
 
-<<<<<<< HEAD
-=======
 class PedestrianDesignated(Building):
     '''
     apartments
@@ -85,4 +85,4 @@ class PedestrianDesignated(Building):
 
     def _deliver_packages(self, num_packages):
         yield self.env.timeout(num_packages * self.deliver.rvs(*self.deliver_params))
->>>>>>> 8111f70e40e84247341667ed416a9b0b0652bbc8
+
