@@ -2,11 +2,10 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import DistanceMetric
 
-eastlake = pd.read_csv("/Users/seyma/Documents/GitHub/microhub_sim/input_data/eastlake.csv")
-cap = pd.read_csv("/Users/seyma/Documents/GitHub/microhub_sim/input_data/cap.csv")
+eastlake = pd.read_csv("input_data/eastlake.csv")
+cap = pd.read_csv("input_data/cap.csv")
 
 def demand(df):
-
     df['Building'] = np.where(df.PREUSE_DES.str.contains("Apartment|4-Plex"), "Apartment",
                                                np.where(df.PREUSE_DES.str.contains("Condo"), "Condo",
                                                            np.where(df.PREUSE_DES.str.contains("Duplex|Single|Townhouse|Triplex"), "ResidenceBuilding",
@@ -105,9 +104,11 @@ def demand(df):
     join = locations.join(loc, lsuffix='_caller', rsuffix='_other')
     return(join)
 
-print(demand(eastlake))
-demand(cap)
+def main():
+	print(demand(eastlake))
 
+if __name__ == 'main':
+	main()
 
 
 
