@@ -102,3 +102,14 @@ a.append(idx_min)
 
 #df["distance"]
 #print(first_loc_idx)
+
+num_rows=sqrt(neighborhood_size)
+num_cols=num_rows
+
+SYMBOL = '.'
+grid = []
+
+for x in range(num_rows):
+    grid.append([])
+    for y in range(num_cols):
+        grid[x].append(SYMBOL)
