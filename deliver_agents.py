@@ -47,7 +47,7 @@ class AgentPool():
                 yield request
                 temp_param = self.base_params
 
-                # Process into correcty format for simulation
+                # Process into correct format for simulation
                 locations_list = []
                 buildings_list = []
                 num_packages_list = []

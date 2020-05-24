@@ -16,20 +16,9 @@ class Building():
     def _deliver_packages(self, num_packages):
         pass
 
-class SingleFamily(Building):
+class Apartment(Building):
     '''
-    single-family
-    residential-small lot
-    '''
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def _deliver_packages(self, num_packages):
-        pass
-
-class LowRise(Building):
-    '''
-    multi-row townhouse
+    Duplex|Single|Townhouse|Triplex
     '''
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -37,10 +26,19 @@ class LowRise(Building):
     def _deliver_packages(self, num_packages):
         pass
 
-class NeighborhoodCommercial(Building):
+class Condo(Building):
     '''
-    apartments
-    condos
+    Condominium
+    '''
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _deliver_packages(self, num_packages):
+        pass
+
+class ResidenceBuilding(Building):
+    '''
+    Apartment|4-Plex
     '''
     def __init__(self, num_floors, **kwargs):
         super().__init__(**kwargs)
@@ -49,14 +47,3 @@ class NeighborhoodCommercial(Building):
     def _deliver_packages(self, num_packages):
         pass
 
-class PedestrianDesignated(Building):
-    '''
-    apartments
-    condos
-    '''
-    def __init__(self, num_floors, **kwargs):
-        super().__init__(**kwargs)
-        self.num_floors = num_floors
-
-    def _deliver_packages(self, num_packages):
-        pass
