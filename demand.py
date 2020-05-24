@@ -2,14 +2,15 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import DistanceMetric
 import building_objects
-
+from scipy.stats import norm
 import simpy
+
 env = simpy.Environment()
 
 eastlake = pd.read_csv("input_data/eastlake.csv")
 cap = pd.read_csv("input_data/cap.csv")
 
-def demand(df):
+def demand(df, env):
     df['Building'] = np.where(df.PREUSE_DES.str.contains("Apartment|4-Plex"), "Apartment",
                                                np.where(df.PREUSE_DES.str.contains("Condo"), "Condo",
                                                            np.where(df.PREUSE_DES.str.contains("Duplex|Single|Townhouse|Triplex"), "ResidenceBuilding",
@@ -111,21 +112,19 @@ def demand(df):
 
     for value in join["Building"]:
         if value == "Apartment":
-            building.append(building_objects.Apartment(deliver="norm", deliver_params=[180,1], env=env, num_residents=1, name=join.Location_ID[i]))
+            building.append(building_objects.Apartment(deliver=norm, deliver_params=[180,1], env=env, num_residents=1, name=join.Location_ID[i]))
         elif value == "Condo":
-            building.append(building_objects.Condo(num_houses=1,deliver="norm", deliver_params=[120,1], env=env, num_residents=1, name=join.Location_ID[i]))
+            building.append(building_objects.Condo(num_houses=1,deliver=norm, deliver_params=[120,1], env=env, num_residents=1, name=join.Location_ID[i]))
         elif value == "ResidenceBuilding":
-            building.append(building_objects.ResidenceBuilding(deliver="norm", deliver_params=[60,1], env=env, num_residents=1, name=join.Location_ID[i]))
+            building.append(building_objects.ResidenceBuilding(deliver=norm, deliver_params=[60,1], env=env, num_residents=1, name=join.Location_ID[i]))
 
     return(join, building)
 
 def main():
-	demand(eastlake)
+	print(demand(eastlake))
 
 if __name__ == 'main':
 	main()
-
-print(demand(eastlake))
 
 
 
