@@ -99,7 +99,7 @@ def demand(df):
     distances=pd.DataFrame(distances)
     distances.columns=["Distance(mi)"]
 
-    loc = df[['LAT','LON']]
+    loc = df[['LAT','LON', "Building"]]
     locations = pd.concat([locations, distances], axis=1, sort=False)
     join = locations.join(loc, lsuffix='_caller', rsuffix='_other')
     return(join)
