@@ -17,6 +17,35 @@ class Building():
     def _deliver_packages(self, num_packages):
         pass
 
+class SingleFamily(Building):
+    '''
+    Single Family or Townhouses
+    '''
+    def __init__(self, deliver, **kwargs):
+        super().__init__(**kwargs)
+        self.deliver = deliver
+
+    def _deliver_packages(self, num_packages):
+        yield self.env.timeout(num_packages * self.deliver.rvs())
+
+class MultiStory(Building):
+    '''
+    Condos or apartments that are multiple stories
+
+    Init:
+        deliver = random distribution that follows scipy api
+        deliver_params = list(parameters for deliver distribution)
+
+    '''
+    def __init__(self, deliver, deliver_params, **kwargs):
+        super().__init__(**kwargs)
+        self.deliver = deliver
+        self.deliver_params = deliver_params # Constant for number of residents delivery
+
+    def _deliver_packages(self, num_packages):
+        yield self.env.timeout(np.min(np.random.randint(low=1, high=self.num_residents)*self.deliver_params, num_packages) + num_packages * self.deliver.rvs())
+
+# Other Buildings
 class Apartment(Building):
     '''
 <<<<<<< HEAD
@@ -52,12 +81,11 @@ class Condo(Building):
     '''
     def __init__(self, num_houses, deliver, deliver_params, **kwargs):
         super().__init__(**kwargs)
-        self.num_houses = num_houses
         self.deliver = deliver
         self.deliver_params = deliver_params
 
     def _deliver_packages(self, num_packages):
-        yield self.env.timeout(np.min(np.random.randint(low=1, high=self.num_houses)*self.deliver_params[-1], num_packages) + num_packages * self.deliver.rvs(*self.deliver_params[:-1]))
+        yield self.env.timeout(np.min(np.random.randint(low=1, high=self.num_residents)*self.deliver_params[-1], num_packages) + num_packages * self.deliver.rvs(*self.deliver_params[:-1]))
 
 class ResidenceBuilding(Building):
     '''
@@ -65,7 +93,6 @@ class ResidenceBuilding(Building):
     '''
     def __init__(self, num_floors, deliver, deliver_params, **kwargs):
         super().__init__(**kwargs)
-        self.num_floors = num_floors
         self.deliver = deliver
         self.deliver_params = deliver_params
 

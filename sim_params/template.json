@@ -1,0 +1,29 @@
+{
+	"demand":{
+		"neighborhood_size":[100,100],
+		"building_size":1/50,
+		"building_classes":["bo.SingleFamily", "bo.MultiStory"],
+		"building_params":[{
+			"deliver": "norm(1/120,1/120)",
+			"name":"SingleFamily"
+		},
+		{
+			"deliver": "norm(1/60,1/120)",
+			"deliver_params": 1/120,
+			"name":"MultiStory"
+		}],
+		"building_num_residents":["poisson(1)","poisson(100)"],
+		"pacakage_dist":"poisson(2)"
+	},
+	"agentpool":{
+		"electric_bike":{
+		
+		},
+		"courier_van":{
+		
+		},
+		"courier_vehicle":{
+		
+		}
+	}
+}

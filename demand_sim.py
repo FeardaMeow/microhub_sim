@@ -13,8 +13,6 @@ import building_objects
 
 import simpy
 
-env = simpy.Environment()
-
 def brownian(x0, n, dt, delta = 0.25, out=None):
     """
     Generate an instance of Brownian motion (i.e. the Wiener process):
@@ -102,7 +100,7 @@ def route_plot(x_coord,y_coord):
     grid(True)
     show()
 
-def demand(num_stops=500, step_size= 1/20, apt=0.4, condo=0.3):
+def demand(env, num_stops=500, step_size= 1/20, apt=0.4, condo=0.3):
     '''
 
     Units in miles
@@ -169,7 +167,8 @@ def demand(num_stops=500, step_size= 1/20, apt=0.4, condo=0.3):
     return route, building
 
 def main():
-    route, building = demand(num_stops=500, step_size=1 / 20, apt=0.4, condo=0.3)
+    env = simpy.Environment()
+    route, building = demand(env=env, num_stops=500, step_size=1 / 20, apt=0.4, condo=0.3)
     route_plot(route["X_coord"], route["Y_coord"])
     print(route,building)
 
