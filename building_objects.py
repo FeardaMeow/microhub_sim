@@ -12,7 +12,7 @@ class Building():
         '''
         Generic Delivery Process: Make Delivery, Return to Vehicle
         '''
-        self._deliver_packages(num_packages)
+        yield self.env.process(self._deliver_packages(num_packages))
 
     def _deliver_packages(self, num_packages):
         pass
@@ -26,7 +26,7 @@ class SingleFamily(Building):
         self.deliver = deliver
 
     def _deliver_packages(self, num_packages):
-        yield self.env.timeout(num_packages * self.deliver.rvs())
+        yield self.env.timeout(num_packages * np.max([self.deliver.rvs(),1/360]))
 
 class MultiStory(Building):
     '''
@@ -43,7 +43,7 @@ class MultiStory(Building):
         self.deliver_params = deliver_params # Constant for number of residents delivery
 
     def _deliver_packages(self, num_packages):
-        yield self.env.timeout(np.min(np.random.randint(low=1, high=self.num_residents)*self.deliver_params, num_packages) + num_packages * self.deliver.rvs())
+        yield self.env.timeout(np.min([np.random.randint(low=1, high=self.num_residents+1)*self.deliver_params, num_packages]) + num_packages * np.max([self.deliver.rvs(),1/360]))
 
 # Other Buildings
 class Apartment(Building):
@@ -65,7 +65,7 @@ class Apartment(Building):
         self.deliver_params = deliver_params
 
     def _deliver_packages(self, num_packages):
-        yield self.env.timeout(self.deliver.rvs(*self.deliver_params)*num_packages)
+        yield self.env.timeout(np.max([self.deliver.rvs(*self.deliver_params), 1/360])*num_packages)
 
 class Condo(Building):
     '''

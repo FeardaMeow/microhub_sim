@@ -41,7 +41,12 @@ class AgentPool():
         self.turnaround_time = turnaround_time
         self.turnaround_params = turnaround_params # constant
 
-    def process_deliveries(self, locations, buildings):
+        #Metrics
+        self.throughput = 0
+        self.distance = 0
+
+
+    def process_deliveries(self, locations, buildings, **kwargs):
         '''
         Input:
             locations = list of location in sorted order 
@@ -75,20 +80,26 @@ class AgentPool():
                 # Wait till a deliverh agent is available
                 yield request
                 temp_param = self.base_params
-                
-                # Turnaround time to pack up new deliveries and return to delivering
-                yield self.env.timeout(self._turnaround_time(num_packages_temp))
 
                 # Update parameters and create delivery agent
                 temp_param.update({'delivery_schedule':DeliverySchedule(locations_list, buildings_list, num_packages_list), 'env':self.env})
                 delivery_agent = self.agent(**temp_param)
-                delivery_agent.make_deliveries()
+                yield self.env.process(delivery_agent.make_deliveries(self._update_metric, **kwargs))
+
+                # Turnaround time to pack up new deliveries and return to delivering
+                yield self.env.timeout(self._turnaround_time(num_packages_temp))
 
     def _num_packages(self):
         return self.package_dist.rvs()
 
     def _turnaround_time(self, num_packages):
-        return num_packages * self.turnaround_time.rvs() + self.turnaround_params
+        return num_packages * np.max([self.turnaround_time.rvs(),1/120]) + self.turnaround_params
+
+    def _update_metric(self, metric, value):
+        if metric == 'distance':
+            self.distance += value
+        elif metric == 'throughput':
+            self.throughput += value
 
 class Agent():
     def __init__(self, env, delivery_schedule, current_location, delivery_hub_location, speed):
@@ -100,23 +111,20 @@ class Agent():
         # Drive Parameters
         self.speed = speed
 
-        # Performance metrics
-        self.distance = 0
-
-    def make_deliveries(self):
+    def make_deliveries(self, metric_update_func, **kwargs):
         '''
         General Process: Drive to delivery site, call building object make delivery, repeat until no packages left
         '''
         # Deliver all carried packages
         for location, building, num_packages in self.delivery_schedule:
-            self._drive(location)
-            self._park(building)
-            self._deliver(num_packages, building)
+            yield self.env.process(self._drive(location, metric_update_func))
+            yield self.env.process(self._park(building))
+            yield self.env.process(self._deliver(num_packages, building, metric_update_func))
 
         # Go back and grab more deliveries
-        self._drive(self.delivery_hub_location)
+        self._drive(self.delivery_hub_location, metric_update_func, **kwargs)
 
-    def _drive(self, location):
+    def _drive(self, location, metric_update_func, **kwargs):
         '''
         TODO: Create timeout for driving time based on drive distribution and speed
         '''
@@ -124,8 +132,10 @@ class Agent():
         for i,j in zip(location, self.current_location):
             distance += np.abs(i-j)
 
-        self.distance += distance
-        yield self.env.timeout(distance/self.speed.rvs())
+        yield self.env.timeout(distance/self.speed)
+        self.current_location = location
+        if 'to_hub' not in kwargs:
+            metric_update_func('distance', distance)
 
     def _park(self, building):
         '''
@@ -133,8 +143,9 @@ class Agent():
         '''
         pass
 
-    def _deliver(self, num_packages, building):
-        building.process_delivery(num_packages)
+    def _deliver(self, num_packages, building, metric_update_func):
+        yield self.env.process(building.process_delivery(num_packages))
+        metric_update_func('throughput', num_packages)
 
 class Electric_Bike(Agent):
     def __init__(self, parking, **kwargs):
@@ -145,7 +156,7 @@ class Electric_Bike(Agent):
         '''
         TODO: 1. Call 'yield env.timeout()' on parking
         '''
-        yield self.env.timeout(self.parking.rvs())
+        yield self.env.timeout(np.max([self.parking.rvs(),1/360]))
 
 class Courier_Van(Agent):
     def __init__(self, parking, **kwargs):
@@ -156,7 +167,7 @@ class Courier_Van(Agent):
         '''
         TODO: 1. Call 'yield env.timeout()' on parking
         '''
-        yield self.env.timeout(self.parking[building.name].rvs())
+        yield self.env.timeout(np.max([self.parking[building.name].rvs(), 1/360]))
 
 class Courier_Car(Agent):
     def __init__(self, parking, **kwargs):
@@ -167,4 +178,4 @@ class Courier_Car(Agent):
         '''
         TODO: 1. Call 'yield env.timeout()' on parking
         '''
-        yield self.env.timeout(self.parking[building.name].rvs())
+        yield self.env.timeout(np.max([self.parking[building.name].rvs(), 1/360]))
