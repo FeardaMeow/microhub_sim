@@ -3,10 +3,9 @@ import numpy as np
 
 class Building():
 
-    def __init__(self, env, num_residents, name):
+    def __init__(self, env, num_residents):
         self.env = env
         self.num_residents = num_residents
-        self.name = name
 
     def process_delivery(self, num_packages):
         '''
@@ -24,6 +23,7 @@ class SingleFamily(Building):
     def __init__(self, deliver, **kwargs):
         super().__init__(**kwargs)
         self.deliver = deliver
+        self.name = "SingleFamily"
 
     def _deliver_packages(self, num_packages):
         yield self.env.timeout(num_packages * np.max([self.deliver.rvs(),1/360]))
@@ -41,6 +41,7 @@ class MultiStory(Building):
         super().__init__(**kwargs)
         self.deliver = deliver
         self.deliver_params = deliver_params # Constant for number of residents delivery
+        self.name = "MultiStory"
 
     def _deliver_packages(self, num_packages):
         yield self.env.timeout(np.min([np.random.randint(low=1, high=self.num_residents+1)*self.deliver_params, num_packages]) + num_packages * np.max([self.deliver.rvs(),1/360]))

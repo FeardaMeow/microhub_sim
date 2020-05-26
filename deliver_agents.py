@@ -2,13 +2,14 @@ import simpy
 import numpy as np
 
 class DeliverySchedule():
-    def __init__(self, locations, buildings, num_packages):
+    def __init__(self, locations, buildings):
         '''
             Assumption the locations are in order of delivery route
         '''
-        self.locations = locations
-        self.buildings = buildings
-        self.num_packages  = num_packages
+        self.locations = []
+        self.buildings = []
+        self.num_packages = []
+        self._convert(locations, buildings)
 
         self.current_index = 0
 
@@ -22,20 +23,29 @@ class DeliverySchedule():
             self.current_index += 1
             return self.locations[self.current_index-1], self.buildings[self.current_index-1], self.num_packages[self.current_index-1]
 
+    def _convert(self, locations,buildings):
+        for i,j in zip(locations, buildings):
+            if len(self.locations) == 0:
+                self.locations.append(i)
+                self.buildings.append(j)
+                self.num_packages.append(1)
+            else:
+                if self.locations[-1] == i:
+                    self.num_packages[-1] += 1
+                else:
+                    self.locations.append(i)
+                    self.buildings.append(j)
+                    self.num_packages.append(1)
+
 class AgentPool():
     '''
     Creates a pool of delivery agents to mimic a finite resource
     '''
-    def __init__(self, env, num_agents, agent, base_params, package_dist, turnaround_time, turnaround_params):
+    def __init__(self, env, num_agents, turnaround_time, turnaround_params):
         self.env = env
 
         # Agent params
         self.num_agents = simpy.Resource(env, num_agents)
-        self.agent = agent # Agent object
-        self.base_params = base_params
-
-        # Num packages per agent tour params
-        self.package_dist = package_dist
 
         # Turnaround time parameters
         self.turnaround_time = turnaround_time
@@ -46,54 +56,24 @@ class AgentPool():
         self.distance = 0
 
 
-    def process_deliveries(self, locations, buildings, **kwargs):
+    def process_deliveries(self, agent, num_packages, **kwargs):
         '''
         Input:
             locations = list of location in sorted order 
             buildings = list of buildings in sorted order based on location
         '''
-        # Process all deliveries till empty
-        while len(locations) > 0:
-            with self.num_agents.request() as request:
-                # Process into correct format for simulation
-                locations_list = []
-                buildings_list = []
-                num_packages_list = []
 
-                num_packages_temp = np.min([self._num_packages(), len(locations)])
+        with self.num_agents.request() as request:
+            # Wait till a deliverh agent is available
+            yield request
 
-                for i in range(num_packages_temp):
-                    loc_i = locations.pop(0)
-                    building_i = buildings.pop(0)
-                    if i == 0:
-                        locations_list.append(loc_i)
-                        buildings_list.append(building_i)
-                        num_packages_list.append(1)
-                    else:
-                        if locations_list[-1] == loc_i:
-                            num_packages_list[-1] += 1
-                        else:
-                            locations_list.append(loc_i)
-                            buildings_list.append(building_i)
-                            num_packages_list.append(1)
+            # Turnaround time to pack up deliveries and return to delivering
+            yield self.env.timeout(self._turnaround_time(num_packages))
 
-                # Wait till a deliverh agent is available
-                yield request
-                temp_param = self.base_params
-
-                # Update parameters and create delivery agent
-                temp_param.update({'delivery_schedule':DeliverySchedule(locations_list, buildings_list, num_packages_list), 'env':self.env})
-                delivery_agent = self.agent(**temp_param)
-                yield self.env.process(delivery_agent.make_deliveries(self._update_metric, **kwargs))
-
-                # Turnaround time to pack up new deliveries and return to delivering
-                yield self.env.timeout(self._turnaround_time(num_packages_temp))
-
-    def _num_packages(self):
-        return self.package_dist.rvs()
+            yield self.env.process(agent.make_deliveries(self._update_metric, **kwargs))
 
     def _turnaround_time(self, num_packages):
-        return num_packages * np.max([self.turnaround_time.rvs(),1/120]) + self.turnaround_params
+        return num_packages * np.max([self.turnaround_time.rvs(),1/360]) + self.turnaround_params
 
     def _update_metric(self, metric, value):
         if metric == 'distance':
@@ -144,8 +124,8 @@ class Agent():
         pass
 
     def _deliver(self, num_packages, building, metric_update_func):
-        yield self.env.process(building.process_delivery(num_packages))
         metric_update_func('throughput', num_packages)
+        yield self.env.process(building.process_delivery(num_packages))
 
 class Electric_Bike(Agent):
     def __init__(self, parking, **kwargs):

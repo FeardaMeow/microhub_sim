@@ -32,11 +32,11 @@ class demand_generator():
 
         # Create building objects for the neighborhood
         self.neighborhood = [None] * neighborhood_size
-        for i in tqdm(range(neighborhood_size)):
+        for i in range(neighborhood_size):
             building_index = int(neighborhood_key[i])
             num_residents = self.building_num_residents[building_index].rvs()
             param_dict = self.building_params[building_index]
-            self.neighborhood[i] = self.building_classes[building_index](**param_dict, env=self.env, num_residents=num_residents, )
+            self.neighborhood[i] = self.building_classes[building_index](**param_dict, env=self.env, num_residents=num_residents)
 
     def _create_route(self, n):
         # Random Starting Point
@@ -47,23 +47,21 @@ class demand_generator():
         count_i = 0
 
         while count_i < n:
-            with tqdm(total=n) as pbar:
-                num_packages = np.min([self.package_dist.rvs(), n-count_i])
-                for _ in range(num_packages):
-                    locations[count_i] = [j*self.building_size for j in current_loc]
-                    buildings[count_i] = self.neighborhood[current_loc[0]*self.neighborhood_size[0] + current_loc[1]]
+            num_packages = np.min([self.package_dist.rvs(), n-count_i])
+            for _ in range(num_packages):
+                locations[count_i] = [j*self.building_size for j in current_loc]
+                buildings[count_i] = self.neighborhood[current_loc[0]*self.neighborhood_size[0] + current_loc[1]]
 
-                    count_i += 1
-                pbar.update(count_i)
-                # Stepping
-                cl_index = int(np.random.randint(low=0, high=2))
-                current_loc[cl_index] += np.random.choice([-1,1])
+                count_i += 1
+            # Stepping
+            cl_index = int(np.random.randint(low=0, high=2))
+            current_loc[cl_index] += np.random.choice([-1,1])
 
-                # Check if outside bounds, if so reflect
-                if current_loc[cl_index] >= self.neighborhood_size[cl_index]:
-                    current_loc[cl_index] = self.neighborhood_size[cl_index]-2
-                elif current_loc[cl_index] < 0:
-                    current_loc[cl_index] = 1
+            # Check if outside bounds, if so reflect
+            if current_loc[cl_index] >= self.neighborhood_size[cl_index]:
+                current_loc[cl_index] = self.neighborhood_size[cl_index]-2
+            elif current_loc[cl_index] < 0:
+                current_loc[cl_index] = 1
 
         return locations, buildings
 

@@ -1,4 +1,5 @@
 import simpy
+import pandas as pd
 import numpy as np
 import demand_sim_2 as demand
 import building_objects as bo
@@ -7,53 +8,96 @@ import json
 from scipy.stats import poisson, norm
 import os
 
-def model_runner(param_folder, output_file, seed):
-    np.random.seed(seed)
+# Initialize Variables
+microhub_miles = 0
 
-    for root, dirs, files in os.walk(mypath):
+def model_runner(param_folder, output_folder, seed):
+    np.random.seed(seed)
+    
+    for root, dirs, files in os.walk(param_folder):
         for f_name in files:
             if f_name.endswith(".json"):
                 with open(os.path.join(root,f_name), "rb") as f:
+                    ### LOOP BELOW HERE FOR MULTIPLE SIM RUNS ###
                     # Load model parameters
                     model_params = json.load(f)
+                
+                # Convert model params to proper types
+                model_params = parse_json(model_params)
 
+                microhub_miles = [model_params['demand']['microhub_location'][0]*model_params['demand']['building_size'],model_params['demand']['microhub_location'][1]*model_params['demand']['building_size']]
+                model_params['sim']['agent_gen']['agent_params'][0].update({"current_location":microhub_miles,"delivery_hub_location":microhub_miles})
+
+                # Create dataframe to store performance metrics and pre-allocate memory
+                df_sim_data = pd.DataFrame(index=[f_name.split('.')[0]]*model_params["sim"]["num_runs"], columns=['run_num', 'eb_throughput', 'eb_miles', 'eb_num_agents',
+                                                    'van_throughput', 'van_miles', 'van_num_agents',
+                                                    'car_throughput', 'car_miles', 'car_num_agents'])
+
+                for sim_run_i in range(model_params["sim"]["num_runs"]):
                     # Create model
                     env = simpy.Environment()
-
-                    # Convert model params to proper types
-                    model_params = parse_json(model_params)
                     
-                    microhub_miles = [model_params['demand']['microhub_location'][0]*model_params['demand']['building_size'],model_params['demand']['microhub_location'][1]*model_params['demand']['building_size']]
-                    model_params['agentpool']["electric_bike"].update({"current_location":microhub_miles,"delivery_hub_location":microhub_miles})
-
                     # Create sim data generator
                     sim_data = demand.demand_generator(env=env, **model_params['demand'])
 
-                    ### LOOP BELOW HERE FOR MULTIPLE SIM RUNS ###
-
+                
                     # Create agent pools
                     electric_bike_pool = da.AgentPool(env=env, **model_params['agentpool']['electric_bike'])
                     courier_van_pool = da.AgentPool(env=env, **model_params['agentpool']['courier_van'])
                     courier_vehicle_pool = da.AgentPool(env=env, **model_params['agentpool']['courier_vehicle'])
 
+                    # Create sim runner params
+                    sim_params = {"num_agents":[model_params['agentpool'][i]['num_agents'] for i in model_params['agentpool']]}
+                    sim_params['agent_pools'] = [electric_bike_pool, courier_van_pool, courier_vehicle_pool]
+                    sim_params.update(model_params["sim"]["agent_gen"])
 
                     #### RUN SIM ####
-                    location, building = sim_data.generate_demand(model_params['sim']['demand_length'])
-                    env.process(electric_bike_pool.process_deliveries(location, building))
-                    location, building = sim_data.generate_demand(model_params['sim']['demand_length'])
-                    env.process(courier_van_pool.process_deliveries(location, building, to_hub=True))
-                    location, building = sim_data.generate_demand(model_params['sim']['demand_length'])
-                    env.process(courier_vehicle_pool.process_deliveries(location, building, to_hub=True))
+                    env.process(agent_gen(env=env, sim_data_gen=sim_data, **sim_params))
 
                     env.run(until=model_params['sim']['sim_time'])
                     #### RUN SIM ####
 
                     #### COLLECT PERFORMANCE METRICS ####
-
+                    df_sim_data.iloc[sim_run_i] = [sim_run_i, electric_bike_pool.throughput, electric_bike_pool.distance, model_params['agentpool']["electric_bike"]['num_agents'],
+                                                    courier_van_pool.throughput, courier_van_pool.distance, model_params['agentpool']["courier_van"]['num_agents'],
+                                                    courier_vehicle_pool.throughput, courier_vehicle_pool.distance, model_params['agentpool']["courier_vehicle"]['num_agents']]
                     #### COLLECT PERFORMANCE METRICS ####
+                df_sim_data.to_csv(os.path.join(output_folder, f_name.split('.')[0] + '.csv'), index_label='expr_id')
+                
                     
 
+def agent_gen(env, num_agents, agents, agent_params, agent_pools, package_dist, sim_data_gen):
+    # Seed the model with initial agents
+    for i in range(len(num_agents)):
+        for _ in range(num_agents[i] + 5):
+            num_packages = package_dist[i].rvs() # Generate number of packages this agent will hold
+            locations, buildings = sim_data_gen.generate_demand(num_packages) # Generate simulated data route
+            delivery_schedule = da.DeliverySchedule(locations, buildings)
 
+            temp_params = {'delivery_schedule':delivery_schedule, 'env':env} # Update agent parameters
+            temp_params.update(agent_params[i])
+
+            agents[i](**temp_params)
+
+            env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+
+    # Continuously generate demand
+    while True:
+        for i in range(len(agent_pools)):
+            if len(agent_pools[i].num_agents.queue) < 5:
+                for _ in range(5-len(agent_pools[i].num_agents.queue)):
+                    num_packages = package_dist[i].rvs() # Generate number of packages this agent will hold
+                    locations, buildings = sim_data_gen.generate_demand(num_packages) # Generate simulated data route
+                    delivery_schedule = da.DeliverySchedule(locations, buildings)
+
+                    temp_params = {'delivery_schedule':delivery_schedule, 'env':env} # Update agent parameters
+                    temp_params.update(agent_params[i])
+
+                    agents[i](**temp_params)
+
+                    env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+
+        yield env.timeout(1/12) # Wait 5 minutes before checking again
 
 def parse_json(json):
     for key in json:
@@ -63,6 +107,8 @@ def parse_json(json):
             for i in range(len(json[key])):
                 if isinstance(json[key][i], str):
                     json[key][i] = eval(json[key][i])
+                elif isinstance(json[key][i], dict):
+                    json[key][i] = parse_json(json[key][i])
         elif isinstance(json[key], str):
             json[key] = eval(json[key])
         
@@ -70,73 +116,12 @@ def parse_json(json):
 
 
 def main():
-    env = simpy.Environment()
-    np.random.seed(9999)
-
-    #### DEMAND ####
-    neighborhood_size = [100,100] # Num buildings x num buildings
-    microhub_location = [np.random.randint(0,100),np.random.randint(0,100)]
-
-    # Building Params
-    building_size = 1/50 # 100 feet but in miles
-    building_classes = [bo.SingleFamily, bo.MultiStory] # List of the buildings classes in the sim model
-    building_params = [{'deliver':norm(1/120,1/120),'name':'SingleFamily'},{'deliver':norm(1/90,1/120),'deliver_params':1/120, 'name':'MultiStory'}] # List of dictionary parameter templates
-    building_num_residents = [poisson(1), poisson(100)] # List of poisson RVs to simulate different number of residents per lot
-    building_distribution = [0.7] # A list of floats with len(class-1) with the last class taking the rest
-
-    # Package Params
-    package_dist = poisson(2) # A poisson RV to simulate the number of packages that will be delivered to a household
-
-    sim_data = demand.demand_generator(env=env, neighborhood_size=neighborhood_size, microhub_location=microhub_location, building_size=building_size, 
-                                building_classes=building_classes, building_params=building_params, building_num_residents=building_num_residents, 
-                                building_distribution=building_distribution, package_dist=package_dist)
-    #### DEMAND ####
-
-    #### AGENT POOLS ####
-    microhub_miles = [microhub_location[0]*building_size, microhub_location[1]*building_size]
-    base_params_eb = {
-        'current_location': microhub_miles,
-        'delivery_hub_location': microhub_miles,
-        'speed': 10,
-        'parking':norm(1/60,1/720)
-        }
-
-    base_params_van = {
-        'current_location': [0,0],
-        'delivery_hub_location': [0,-20],
-        'speed': 20,
-        'parking':{'SingleFamily':norm(2/60,1/120), 'MultiStory':norm(5/60,1/60)}
-        }
-
-    base_params_veh = {
-        'current_location': [0,0],
-        'delivery_hub_location': [0,-20],
-        'speed': 20,
-        'parking':{'SingleFamily':norm(2/60,1/120), 'MultiStory':norm(5/60,1/60)}
-        }
-
-    electric_bike_pool = da.AgentPool(env=env, num_agents=20, agent=da.Electric_Bike, package_dist=poisson(30), turnaround_time=norm(1/120,1/720), turnaround_params=1.0/12, base_params=base_params_eb)
-    courier_van_pool = da.AgentPool(env=env, num_agents=2, agent=da.Courier_Van, package_dist=poisson(300), turnaround_time=norm(1/120,1/720),turnaround_params=1, base_params=base_params_van)
-    courier_vehicle_pool = da.AgentPool(env=env, num_agents=10, agent=da.Courier_Car, package_dist=poisson(50), turnaround_time=norm(1/120,1/720),turnaround_params=1, base_params=base_params_veh)
-
-    #### AGENT POOLS ####
-
-    #### RUN SIM ####
-    location, building = sim_data.generate_demand(1000)
-    env.process(electric_bike_pool.process_deliveries(location, building))
-    location, building = sim_data.generate_demand(1000)
-    env.process(courier_van_pool.process_deliveries(location, building, to_hub=True))
-    location, building = sim_data.generate_demand(1000)
-    env.process(courier_vehicle_pool.process_deliveries(location, building, to_hub=True))
-
-    env.run(until=8)
-    #### RUN SIM ####
-
-    #### CHECK METRICS ####
-    print(microhub_location)
-    print(electric_bike_pool.throughput, electric_bike_pool.distance)
-    print(courier_van_pool.throughput, courier_van_pool.distance)
-    print(courier_vehicle_pool.throughput, courier_vehicle_pool.distance)
+    model_runner('sim_params', 'sim output', 322)
 
 if __name__ == "__main__":
     main()
+
+'''
+TODO: Create agent generation outside of pool, but add logic to limit generation to num_agents
+
+'''
