@@ -77,9 +77,11 @@ def agent_gen(env, num_agents, agents, agent_params, agent_pools, package_dist, 
             temp_params = {'delivery_schedule':delivery_schedule, 'env':env} # Update agent parameters
             temp_params.update(agent_params[i])
 
-            agents[i](**temp_params)
-
-            env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+            #agents[i](**temp_params)
+            if i == 0:
+                env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+            else:
+                env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages, to_hub=1))
 
     # Continuously generate demand
     while True:
@@ -93,9 +95,12 @@ def agent_gen(env, num_agents, agents, agent_params, agent_pools, package_dist, 
                     temp_params = {'delivery_schedule':delivery_schedule, 'env':env} # Update agent parameters
                     temp_params.update(agent_params[i])
 
-                    agents[i](**temp_params)
+                    #agents[i](**temp_params)
 
-                    env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+                    if i == 0:
+                        env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+                    else:
+                        env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages, to_hub=1))
 
         yield env.timeout(1/12) # Wait 5 minutes before checking again
 

@@ -32,7 +32,7 @@
 		},
 		"courier_vehicle":
 		{
-			"num_agents":10,
+			"num_agents":5,
 			"turnaround_time":"norm(1/120,1/720)",
 			"turnaround_params":0.5
 		}
@@ -54,8 +54,8 @@
 					"parking":"norm(1/60,1/720)"
 				},
 				{
-					"current_location": [0,-10],
-					"delivery_hub_location": [0,-10],
+					"current_location": [0,0],
+					"delivery_hub_location": [0,-15],
 					"speed": 25,
 					"parking":
 						{
@@ -64,8 +64,8 @@
 						}
 				},
 				{
-					"current_location": [0,-10],
-					"delivery_hub_location": [0,-10],
+					"current_location": [0,0],
+					"delivery_hub_location": [0,-15],
 					"speed": 25,
 					"parking":
 						{

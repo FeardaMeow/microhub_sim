@@ -149,6 +149,25 @@ class Courier_Van(Agent):
         '''
         yield self.env.timeout(np.max([self.parking[building.name].rvs(), 1/360]))
 
+    def _drive(self, location, metric_update_func, **kwargs):
+        '''
+        TODO: Create timeout for driving time based on drive distribution and speed
+        '''
+        distance = 0
+        for i,j in zip(location, self.current_location):
+            distance += np.abs(i-j)
+
+        yield self.env.timeout(distance/self.speed)
+        self.current_location = location
+        if 'to_hub' not in kwargs:
+            metric_update_func('distance', distance)
+        else:
+            distance = 0
+            for i,j in zip([0,0], self.current_location):
+                distance += np.abs(i-j)
+            self.current_location = [0,0]
+            yield self.env.timeout(distance/self.speed)
+
 class Courier_Car(Agent):
     def __init__(self, parking, **kwargs):
         super().__init__(**kwargs)
@@ -159,3 +178,22 @@ class Courier_Car(Agent):
         TODO: 1. Call 'yield env.timeout()' on parking
         '''
         yield self.env.timeout(np.max([self.parking[building.name].rvs(), 1/360]))
+
+    def _drive(self, location, metric_update_func, **kwargs):
+        '''
+        TODO: Create timeout for driving time based on drive distribution and speed
+        '''
+        distance = 0
+        for i,j in zip(location, self.current_location):
+            distance += np.abs(i-j)
+
+        yield self.env.timeout(distance/self.speed)
+        self.current_location = location
+        if 'to_hub' not in kwargs:
+            metric_update_func('distance', distance)
+        else:
+            distance = 0
+            for i,j in zip([0,0], self.current_location):
+                distance += np.abs(i-j)
+            self.current_location = [0,0]
+            yield self.env.timeout(distance/self.speed)
