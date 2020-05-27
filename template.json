@@ -14,7 +14,7 @@
 		}],
 		"building_num_residents":["poisson(1)","poisson(100)"],
 		"building_distribution":[0.7],
-		"package_dist":"poisson(2)"
+		"package_dist":"poisson(1)"
 	},
 	"agentpool":
 	{
@@ -44,6 +44,7 @@
 		"agent_gen":
 		{
 			"agents":["da.Electric_Bike","da.Courier_Van","da.Courier_Car"],
+			"route_length":1000,
 			"package_dist":["poisson(30)","poisson(300)","poisson(50)"],
 			"agent_params":
 			[

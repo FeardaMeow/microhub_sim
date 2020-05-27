@@ -44,6 +44,7 @@
 		"agent_gen":
 		{
 			"agents":["da.Electric_Bike","da.Courier_Van","da.Courier_Car"],
+			"route_length":1000,
 			"package_dist":["poisson(30)","poisson(300)","poisson(50)"],
 			"agent_params":
 			[
