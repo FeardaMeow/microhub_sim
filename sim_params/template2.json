@@ -6,14 +6,14 @@
 		"building_size":"1/50",
 		"building_classes":["bo.SingleFamily", "bo.MultiStory"],
 		"building_params":[{
-			"deliver": "norm(3/60,1/120)"
+			"deliver": "norm(2/60,1/120)"
 		},
 		{
-			"deliver": "norm(10/60,2/60)",
+			"deliver": "norm(3/60,2/60)",
 			"deliver_params": 0
 		}],
 		"building_num_residents":["poisson(1)","poisson(100)"],
-		"building_distribution":[0.8],
+		"building_distribution":[0.80],
 		"package_dist":"poisson(2)"
 	},
 	"agentpool":
@@ -22,18 +22,18 @@
 		{
 			"num_agents":1,
 			"turnaround_time":"norm(1/120,1/720)",
-			"turnaround_params":"1/12.0"
+			"turnaround_params":"1/6"
         },
 		"courier_van":
 		{
 			"num_agents":1,
-			"turnaround_time":"norm(1/120,1/720)",
+			"turnaround_time":"norm(1/360,1/720)",
 			"turnaround_params":0.5
 		},
 		"courier_vehicle":
 		{
 			"num_agents":1,
-			"turnaround_time":"norm(1/120,1/720)",
+			"turnaround_time":"norm(2/360,1/720)",
 			"turnaround_params":0.5
 		}
 	},
@@ -50,30 +50,30 @@
 				{
 					"current_location": "microhub_miles",
 					"delivery_hub_location": "microhub_miles",
-					"speed": 15,
-					"parking":"norm(1/60,1/720)"
+					"speed": 10,
+					"parking":"norm(1/120,1/720)"
 				},
 				{
-					"current_location": [0,-10],
-					"delivery_hub_location": [0,-10],
+					"current_location": [0,0],
+					"delivery_hub_location": [0,0],
 					"speed": 25,
 					"parking":
 						{
-							"SingleFamily":"norm(2/60,1/240)",
-							"MultiStory":"norm(4/60,1/240)"
-						},
-					"to_hub": 1
+							"SingleFamily":"norm(1/60,1/120)",
+							"MultiStory":"norm(2/60,1/120)"
+						}
+
 				},
 				{
-					"current_location": [0,-10],
-					"delivery_hub_location": [0,-10],
+					"current_location": [0,0],
+					"delivery_hub_location": [0,0],
 					"speed": 25,
 					"parking":
 						{
-							"SingleFamily":"norm(2/60,1/240)",
-							"MultiStory":"norm(4/60,1/240)"
-						},
-					"to_hub": 1
+							"SingleFamily":"norm(1/60,1/240)",
+							"MultiStory":"norm(2/60,1/240)"
+						}
+
 				}
 			]
 		}

@@ -54,6 +54,7 @@ class AgentPool():
         #Metrics
         self.throughput = 0
         self.distance = 0
+        self.stops = 0
 
 
     def process_deliveries(self, agent, num_packages, **kwargs):
@@ -80,6 +81,8 @@ class AgentPool():
             self.distance += value
         elif metric == 'throughput':
             self.throughput += value
+        else:
+            self.stops += value
 
 class Agent():
     def __init__(self, env, delivery_schedule, current_location, delivery_hub_location, speed):
@@ -125,6 +128,7 @@ class Agent():
 
     def _deliver(self, num_packages, building, metric_update_func):
         metric_update_func('throughput', num_packages)
+        metric_update_func('stops', 1)
         yield self.env.process(building.process_delivery(num_packages))
 
 class Electric_Bike(Agent):

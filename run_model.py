@@ -29,9 +29,9 @@ def model_runner(param_folder, output_folder, seed):
                 model_params['sim']['agent_gen']['agent_params'][0].update({"current_location":microhub_miles,"delivery_hub_location":microhub_miles})
 
                 # Create dataframe to store performance metrics and pre-allocate memory
-                df_sim_data = pd.DataFrame(index=[f_name.split('.')[0]]*model_params["sim"]["num_runs"], columns=['run_num', 'eb_throughput', 'eb_miles', 'eb_num_agents',
-                                                    'van_throughput', 'van_miles', 'van_num_agents',
-                                                    'car_throughput', 'car_miles', 'car_num_agents'])
+                df_sim_data = pd.DataFrame(index=[f_name.split('.')[0]]*model_params["sim"]["num_runs"], columns=['run_num', 'eb_throughput', 'eb_miles', 'eb_num_agents','eb_stops',
+                                                    'van_throughput', 'van_miles', 'van_num_agents','van_stops',
+                                                    'car_throughput', 'car_miles', 'car_num_agents','car_stops'])
 
                 for sim_run_i in range(model_params["sim"]["num_runs"]):
                     # Create model
@@ -58,9 +58,9 @@ def model_runner(param_folder, output_folder, seed):
                     #### RUN SIM ####
 
                     #### COLLECT PERFORMANCE METRICS ####
-                    df_sim_data.iloc[sim_run_i] = [sim_run_i, electric_bike_pool.throughput, electric_bike_pool.distance, model_params['agentpool']["electric_bike"]['num_agents'],
-                                                    courier_van_pool.throughput, courier_van_pool.distance, model_params['agentpool']["courier_van"]['num_agents'],
-                                                    courier_vehicle_pool.throughput, courier_vehicle_pool.distance, model_params['agentpool']["courier_vehicle"]['num_agents']]
+                    df_sim_data.iloc[sim_run_i] = [sim_run_i, electric_bike_pool.throughput, electric_bike_pool.distance, electric_bike_pool.stops, model_params['agentpool']["electric_bike"]['num_agents'],
+                                                    courier_van_pool.throughput, courier_van_pool.distance, courier_van_pool.stops, model_params['agentpool']["courier_van"]['num_agents'],
+                                                    courier_vehicle_pool.throughput, courier_vehicle_pool.distance, courier_vehicle_pool.stops, model_params['agentpool']["courier_vehicle"]['num_agents']]
                     #### COLLECT PERFORMANCE METRICS ####
                 df_sim_data.to_csv(os.path.join(output_folder, f_name.split('.')[0] + '.csv'), index_label='expr_id')
                 
