@@ -55,6 +55,7 @@ class AgentPool():
         self.throughput = 0
         self.distance = 0
         self.stops = 0
+        self.routes = 0
 
 
     def process_deliveries(self, agent, num_packages, **kwargs):
@@ -81,6 +82,8 @@ class AgentPool():
             self.distance += value
         elif metric == 'throughput':
             self.throughput += value
+        elif metric == 'routes':
+            self.routes += value
         else:
             self.stops += value
 
@@ -105,6 +108,7 @@ class Agent():
             yield self.env.process(self._deliver(num_packages, building, metric_update_func))
 
         # Go back and grab more deliveries
+        metric_update_func('routes', 1)
         self._drive(self.delivery_hub_location, metric_update_func, **kwargs)
 
     def _drive(self, location, metric_update_func, **kwargs):

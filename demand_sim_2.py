@@ -34,7 +34,7 @@ class demand_generator():
         self.neighborhood = [None] * neighborhood_size
         for i in range(neighborhood_size):
             building_index = int(neighborhood_key[i])
-            num_residents = self.building_num_residents[building_index].rvs()
+            num_residents = np.max([1,self.building_num_residents[building_index].rvs()])
             param_dict = self.building_params[building_index]
             self.neighborhood[i] = self.building_classes[building_index](**param_dict, env=self.env, num_residents=num_residents)
 
@@ -47,7 +47,13 @@ class demand_generator():
         count_i = 0
 
         while count_i < n:
-            num_packages = np.min([self.package_dist.rvs(), n-count_i])
+            if self.neighborhood[current_loc[0]*self.neighborhood_size[0] + current_loc[1]].name == "MultiStory":
+                num_residents = np.max([3, int(self.neighborhood[current_loc[0]*self.neighborhood_size[0] + current_loc[1]].num_residents*.20)])
+                num_residents = np.random.randint(1,num_residents+1)
+            else:
+                num_residents = self.neighborhood[current_loc[0]*self.neighborhood_size[0] + current_loc[1]].num_residents
+                num_residents = np.random.randint(1,num_residents+1)
+            num_packages = np.min([np.sum(self.package_dist.rvs(size=num_residents)), n-count_i])
             for _ in range(num_packages):
                 locations[count_i] = [j*self.building_size for j in current_loc]
                 buildings[count_i] = self.neighborhood[current_loc[0]*self.neighborhood_size[0] + current_loc[1]]
