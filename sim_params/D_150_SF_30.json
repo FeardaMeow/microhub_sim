@@ -1,0 +1,82 @@
+{
+	"demand":
+	{
+		"neighborhood_size":[200,200],
+		"microhub_location":[49,49],
+		"building_size":"1/50",
+		"building_classes":["bo.SingleFamily", "bo.MultiStory"],
+		"building_params":[{
+			"deliver": "norm(1/60,1/120)"
+		},
+		{
+			"deliver": "norm(6/60,2/60)",
+			"deliver_params": 0
+		}],
+		"building_num_residents":["poisson(1)","poisson(100)"],
+		"building_distribution":[0.30],
+		"package_dist":"poisson(1.5)"
+	},
+	"agentpool":
+	{
+		"electric_bike":
+		{
+			"num_agents":3,
+			"turnaround_time":"norm(1/120,1/720)",
+			"turnaround_params":"1/6"
+        },
+		"courier_van":
+		{
+			"num_agents":6,
+			"turnaround_time":"norm(1/360,1/720)",
+			"turnaround_params":0.5
+		},
+		"courier_vehicle":
+		{
+			"num_agents":3,
+			"turnaround_time":"norm(2/360,1/720)",
+			"turnaround_params":0.5
+		}
+	},
+	"sim":
+	{
+		"sim_time":8,
+		"num_runs":30,
+		"agent_gen":
+		{
+			"agents":["da.Electric_Bike","da.Courier_Van","da.Courier_Car"],
+			"route_length":150,
+			"package_dist":["poisson(30)","poisson(300)","poisson(50)"],
+			"agent_params":
+			[
+				{
+					"current_location": "microhub_miles",
+					"delivery_hub_location": "microhub_miles",
+					"speed": 10,
+					"parking":"norm(1/120,1/720)"
+				},
+				{
+					"current_location": [0,0],
+					"delivery_hub_location": [0,0],
+					"speed": 25,
+					"parking":
+						{
+							"SingleFamily":"norm(1/60,1/120)",
+							"MultiStory":"norm(2/60,1/120)"
+						}
+
+				},
+				{
+					"current_location": [0,0],
+					"delivery_hub_location": [0,0],
+					"speed": 25,
+					"parking":
+						{
+							"SingleFamily":"norm(1/60,1/240)",
+							"MultiStory":"norm(2/60,1/240)"
+						}
+
+				}
+			]
+		}
+	}
+}

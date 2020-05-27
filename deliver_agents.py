@@ -55,7 +55,7 @@ class AgentPool():
         self.throughput = 0
         self.distance = 0
         self.stops = 0
-        self.routes = 0
+        self.routes = 1
 
 
     def process_deliveries(self, agent, num_packages, **kwargs):
