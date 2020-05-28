@@ -46,6 +46,7 @@
 			"agents":["da.Electric_Bike","da.Courier_Van","da.Courier_Car"],
 			"route_length":100,
 			"package_dist":["poisson(30)","poisson(300)","poisson(50)"],
+			"package_min":[20,250,35],
 			"agent_params":
 			[
 				{

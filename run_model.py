@@ -77,37 +77,38 @@ def model_runner(param_folder, output_folder, seed):
                 
                     
 
-def agent_gen(env, num_agents, route_length, agents, agent_params, agent_pools, package_dist, sim_data_gen):
+def agent_gen(env, num_agents, route_length, agents, agent_params, agent_pools, package_dist, package_min, sim_data_gen):
     # Seed the model with initial agents
     packages_to_deliver = [sim_data_gen.generate_demand(route_length) for i in range(len(num_agents))]
     for i in range(len(num_agents)):
         for _ in range(num_agents[i] + 5):
-            locations = [] 
-            buildings = []
-            num_packages = np.min([package_dist[i].rvs(), len(packages_to_deliver[i][0])]) # Generate number of packages this agent will hold
-            #locations, buildings = sim_data_gen.generate_demand(num_packages) # Generate simulated data route
-            for _ in range(num_packages):
-                locations.append(packages_to_deliver[i][0].pop(0))
-                buildings.append(packages_to_deliver[i][1].pop(0))
-            delivery_schedule = da.DeliverySchedule(locations, buildings)
+            if len(packages_to_deliver[i][0]) > 0:
+                locations = [] 
+                buildings = []
+                num_packages = np.min([np.max([package_min[i],package_dist[i].rvs()]), len(packages_to_deliver[i][0])]) # Generate number of packages this agent will hold
+                #locations, buildings = sim_data_gen.generate_demand(num_packages) # Generate simulated data route
+                for _ in range(num_packages):
+                    locations.append(packages_to_deliver[i][0].pop(0))
+                    buildings.append(packages_to_deliver[i][1].pop(0))
+                delivery_schedule = da.DeliverySchedule(locations, buildings)
 
-            temp_params = {'delivery_schedule':delivery_schedule, 'env':env} # Update agent parameters
-            temp_params.update(agent_params[i])
+                temp_params = {'delivery_schedule':delivery_schedule, 'env':env} # Update agent parameters
+                temp_params.update(agent_params[i])
 
-            #agents[i](**temp_params)
-            if i == 0:
-                env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
-            else:
-                env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages, to_hub=1))
+                #agents[i](**temp_params)
+                if i == 0:
+                    env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages))
+                else:
+                    env.process(agent_pools[i].process_deliveries(agents[i](**temp_params), num_packages, to_hub=1))
 
     # Continuously generate demand
     while True:
         for i in range(len(agent_pools)):
-            if len(agent_pools[i].num_agents.queue) < 5:
+            if len(agent_pools[i].num_agents.queue) < 5 and len(packages_to_deliver[i][0]) > 0:
                 for _ in range(5-len(agent_pools[i].num_agents.queue)):
                     locations = [] 
                     buildings = []
-                    num_packages = np.min([package_dist[i].rvs(), len(packages_to_deliver[i][0])]) # Generate number of packages this agent will hold
+                    num_packages = np.min([np.max([package_min[i],package_dist[i].rvs()]), len(packages_to_deliver[i][0])])  # Generate number of packages this agent will hold
                     #locations, buildings = sim_data_gen.generate_demand(num_packages) # Generate simulated data route
                     for _ in range(num_packages):
                         locations.append(packages_to_deliver[i][0].pop(0))
