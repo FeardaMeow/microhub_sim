@@ -44,7 +44,7 @@ class MultiStory(Building):
         self.name = "MultiStory"
 
     def _deliver_packages(self, num_packages):
-        yield self.env.timeout(np.min([np.random.randint(low=1, high=self.num_residents+1)*self.deliver_params, num_packages]) + num_packages * np.max([self.deliver.rvs(),1/360]))
+        yield self.env.timeout(np.min([np.random.randint(low=1, high=self.num_residents+1)*self.deliver_params, num_packages*self.deliver_params]) + num_packages * np.max([self.deliver.rvs(),1/360]))
 
 # Other Buildings
 class Apartment(Building):
