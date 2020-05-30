@@ -153,15 +153,15 @@ def demand(env, num_stops=500, step_size= 1/20, apt=0.4, condo=0.3):
     for value in route["Building"]:
         if value == "Apartment":
             building.append(building_objects.Apartment(deliver=norm, deliver_params=[180, 1], env=env, num_residents=1,
-                                                       name=route.Visit_order[i]))
+                                                ))
         elif value == "Condo":
             building.append(
                 building_objects.Condo(num_houses=1, deliver=norm, deliver_params=[120, 1], env=env, num_residents=1,
-                                       name=route.Visit_order[i]))
+                                       ))
         elif value == "ResidenceBuilding":
             building.append(
                 building_objects.ResidenceBuilding(deliver=norm, deliver_params=[60, 1], env=env, num_residents=1,
-                                                   name=route.Visit_order[i]))
+                                                   ))
         i+=1
 
     return route, building
